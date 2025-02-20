@@ -54,7 +54,7 @@ class LivewireResourceTimeGridServiceProvider extends ServiceProvider
 
                     const eventId = event.dataTransfer.getData('id');
                     // window.livewire.components.findComponent(componentId).call('onEventDropped', eventId, resourceId, hour, slot);
-                    window.livewire.emit('onEventDropped', eventId, resourceId, hour, slot);
+                    window.Livewire.emit('onEventDropped', eventId, resourceId, hour, slot);
                 }
             </script>
 HTML;
