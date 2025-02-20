@@ -39,22 +39,26 @@ class LivewireResourceTimeGrid extends Component
     public $beforeGridView;
     public $afterGridView;
 
-    public function mount($startingHour,
-                          $endingHour,
-                          $interval,
-                          $gridView = null,
-                          $hoursColumnView = null,
-                          $hourView = null,
-                          $resourceColumnView = null,
-                          $resourceColumnHeaderView = null,
-                          $resourceColumnHourSlotView = null,
-                          $eventView = null,
-                          $beforeGridView = null,
-                          $afterGridView = null,
-                          $resourceColumnHeaderHeightInRems = 4,
-                          $hourHeightInRems = 8,
-                          $extras = null)
-    {
+    public $model;
+
+    public function mount(
+        $startingHour,
+        $endingHour,
+        $interval,
+        $gridView = null,
+        $hoursColumnView = null,
+        $hourView = null,
+        $resourceColumnView = null,
+        $resourceColumnHeaderView = null,
+        $resourceColumnHourSlotView = null,
+        $eventView = null,
+        $beforeGridView = null,
+        $afterGridView = null,
+        $resourceColumnHeaderHeightInRems = 4,
+        $hourHeightInRems = 8,
+        $extras = null,
+        $model = null
+    ) {
         $this->startingHour = $startingHour;
         $this->endingHour = $endingHour;
         $this->interval = $interval;
@@ -72,6 +76,8 @@ class LivewireResourceTimeGrid extends Component
 
         $this->hourHeightInRems = $hourHeightInRems;
         $this->resourceColumnHeaderHeightInRems = $resourceColumnHeaderHeightInRems;
+
+        $this->model = $model;
 
         $this->afterMount($extras);
     }
