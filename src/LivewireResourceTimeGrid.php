@@ -41,6 +41,12 @@ class LivewireResourceTimeGrid extends Component
 
     public $model;
 
+    protected $listeners = [
+        'hourSlotClick' => 'hourSlotClick',
+        'onEventClick' => 'onEventClick',
+        'onEventDropped' => 'onEventDropped',
+    ];
+
     public function mount(
         $startingHour,
         $endingHour,
