@@ -24,7 +24,6 @@
 
     <div>
         @includeIf($afterGridView)
-    </div>
 </div>
 
 

@@ -1,7 +1,8 @@
 {
-    "name": "asantibanez/livewire-resource-time-grid",
+    "name": "team383/livewire-resource-time-grid",
     "description": "Laravel Livewire resource time grid component",
     "keywords": [
+        "383group",
         "asantibanez",
         "livewire-resource-time-grid"
     ],
@@ -12,6 +13,11 @@
         {
             "name": "Andrés Santibáñez",
             "email": "santibanez.andres@gmail.com",
+            "role": "Developer"
+        },
+        {
+            "name": "383group",
+            "email": "apps@383project.com",
             "role": "Developer"
         }
     ],
@@ -26,12 +32,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Asantibanez\\LivewireResourceTimeGrid\\": "src"
+            "Team383\\LivewireResourceTimeGrid\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Asantibanez\\LivewireResourceTimeGrid\\Tests\\": "tests"
+            "Team383\\LivewireResourceTimeGrid\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -44,7 +50,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Asantibanez\\LivewireResourceTimeGrid\\LivewireResourceTimeGridServiceProvider"
+                "Team383\\LivewireResourceTimeGrid\\LivewireResourceTimeGridServiceProvider"
             ]
         }
     }

@@ -1,8 +1,8 @@
 <?php
 
-namespace Asantibanez\LivewireResourceTimeGrid\Tests;
+namespace Team383\LivewireResourceTimeGrid\Tests;
 
-use Asantibanez\LivewireResourceTimeGrid\LivewireResourceTimeGridServiceProvider;
+use Team383\LivewireResourceTimeGrid\LivewireResourceTimeGridServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as BaseCase;
 
