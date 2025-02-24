@@ -41,6 +41,8 @@ class LivewireResourceTimeGrid extends Component
 
     public $model;
 
+    public $dragToScroll;
+
     protected $listeners = [
         'hourSlotClick' => 'hourSlotClick',
         'onEventClick' => 'onEventClick',
@@ -63,7 +65,8 @@ class LivewireResourceTimeGrid extends Component
         $resourceColumnHeaderHeightInRems = 4,
         $hourHeightInRems = 8,
         $extras = null,
-        $model = null
+        $model = null,
+        $dragToScroll = false
     ) {
         $this->startingHour = $startingHour;
         $this->endingHour = $endingHour;
@@ -84,6 +87,8 @@ class LivewireResourceTimeGrid extends Component
         $this->resourceColumnHeaderHeightInRems = $resourceColumnHeaderHeightInRems;
 
         $this->model = $model;
+
+        $this->dragToScroll = $dragToScroll;
 
         $this->afterMount($extras);
     }
@@ -119,6 +124,11 @@ class LivewireResourceTimeGrid extends Component
     }
 
     public function onEventDropped($eventId, $resourceId, $hour, $slot)
+    {
+        //
+    }
+
+    public function onGridMouseLeave()
     {
         //
     }
@@ -265,7 +275,7 @@ class LivewireResourceTimeGrid extends Component
 
     public function hourSlotIntervalHeightInRems()
     {
-        return $this->hourHeightInRems / (60/$this->interval);
+        return $this->hourHeightInRems / (60 / $this->interval);
     }
 
     private function getEventStyles($event, $events)
@@ -281,7 +291,7 @@ class LivewireResourceTimeGrid extends Component
 
         $height = $event['starts_at']->diffInMinutes($event['ends_at']) / $this->interval * $this->hourSlotIntervalHeightInRems();
 
-        $height -= 0.05; // Magic fix 😅
+        $height -= 0.05; // Magic fix 😅 (This amount adds some space between the ending edge of the event and the next one below)
 
         $width = $conflictingEvents->count() > 0
             ? 85 / $conflictingEvents->count()

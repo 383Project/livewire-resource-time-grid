@@ -56,6 +56,118 @@ class LivewireResourceTimeGridServiceProvider extends ServiceProvider
                     // window.livewire.components.findComponent(componentId).call('onEventDropped', eventId, resourceId, hour, slot);
                     Livewire.dispatch('onEventDropped', [eventId, resourceId, hour, slot]);
                 }
+
+            </script>
+HTML;
+        });
+
+        Blade::directive('livewireResourceTimeGridDragToScroll', function () {
+            return <<<'HTML'
+            <script>
+                function initDragToScroll() {
+
+                    document.querySelectorAll('.drag-to-scroll').forEach(scrollElement => {
+                        scrollElement.querySelectorAll('.drag-to-scroll .overflow-x-auto').forEach(element => {
+                            element.addEventListener('contextmenu', (event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                return false;
+                            });
+
+                            element.addEventListener('mousedown', (event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                if (event.button == 0) {
+                                    // Drag to create
+                                    window.dragToScroll = null;
+                                    window.dragToCreate = {
+                                        element: element
+                                        , x: event.clientX
+                                        , y: event.clientY
+                                    , };
+                                    console.log('drag to create');
+                                    // return false;
+                                }
+                                body = document.getElementsByTagName('body')[0];
+                                window.dragToCreate = null;
+                                window.dragToScroll = {
+                                    element: element
+                                    , body
+                                    , x: event.clientX
+                                    , y: event.clientY
+                                    , scrollLeft: element.scrollLeft
+                                    , scrollTop: body.scrollTop
+                                , };
+                                console.log('drag to scroll', body);
+                                // return false;
+                            });
+
+                            element.addEventListener('mouseup', (event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                window.dragToScroll = null;
+                                window.dragToCreate = null;
+                                console.log('drag to scroll end');
+                                return false;
+                            });
+
+                            element.addEventListener('mouseleave', (event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                window.dragToScroll = null;
+                                window.dragToCreate = null;
+                                console.log('drag to scroll leave');
+                                return false;
+                            });
+
+                            element.addEventListener('mousemove', (event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                if (window.dragToScroll) {
+                                    let xdiff = window.dragToScroll.x - event.clientX;
+                                    let ydiff = window.dragToScroll.y - event.clientY;
+                                    window.dragToScroll.element.scrollLeft = window.dragToScroll.scrollLeft + xdiff;
+                                    window.scrollBy(0, ydiff);
+
+                                    window.dragToScroll = {
+                                        ...window.dragToScroll
+                                        , x: event.clientX
+                                        , y: event.clientY
+                                        , scrollLeft: element.scrollLeft
+                                        , scrollTop: body.scrollTop
+                                    , };
+
+
+
+                                    console.log('drag to scroll move', ydiff, window.dragToScroll.scrollTop);
+                                    return false;
+                                }
+                                if (window.dragToCreate) {
+                                    console.log('drag to create move');
+                                    return false;
+                                }
+                            });
+                        });
+                        scrollElement.querySelectorAll('[data-resource-id]').forEach(element => {
+                            element.addEventListener('mouseover', (event) => {
+                                const rect = element.getBoundingClientRect();
+                                tip = scrollElement.querySelector('.drag-to-scroll-pointer-note');
+                                tip.style.display = 'block';
+                                tip.style.left = rect.left + rect.width + 'px';
+                                tip.style.top = rect.top + rect.height + 'px';
+                                tip.innerHTML = element.getAttribute('data-hour') + ':' + element.getAttribute('data-slot') + '<br/>' + element.getAttribute('data-resource-title');
+                            });
+                            element.addEventListener('mouseout', (event) => {
+                                tip = scrollElement.querySelector('.drag-to-scroll-pointer-note');
+                                tip.style.display = 'none';
+                            });
+                        });
+
+                    });
+
+                }
+
+                initDragToScroll();
             </script>
 HTML;
         });
