@@ -1,6 +1,6 @@
 <?php
 
-namespace Asantibanez\LivewireResourceTimeGrid;
+namespace Team383\LivewireResourceTimeGrid;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -8,7 +8,7 @@ use Livewire\Component;
 
 /**
  * Class LivewireResourceTimeGrid
- * @package Asantibanez\LivewireResourceTimeGrid
+ * @package Team383\LivewireResourceTimeGrid
  * @property string $gridView
  * @property string $hoursColumnView
  * @property string $hourView
@@ -39,22 +39,37 @@ class LivewireResourceTimeGrid extends Component
     public $beforeGridView;
     public $afterGridView;
 
-    public function mount($startingHour,
-                          $endingHour,
-                          $interval,
-                          $gridView = null,
-                          $hoursColumnView = null,
-                          $hourView = null,
-                          $resourceColumnView = null,
-                          $resourceColumnHeaderView = null,
-                          $resourceColumnHourSlotView = null,
-                          $eventView = null,
-                          $beforeGridView = null,
-                          $afterGridView = null,
-                          $resourceColumnHeaderHeightInRems = 4,
-                          $hourHeightInRems = 8,
-                          $extras = null)
-    {
+    public $model;
+
+    public $dragToScroll;
+    public $dragToCreate;
+
+    protected $listeners = [
+        'hourSlotClick' => 'hourSlotClick',
+        'onEventClick' => 'onEventClick',
+        'onEventDropped' => 'onEventDropped',
+    ];
+
+    public function mount(
+        $startingHour,
+        $endingHour,
+        $interval,
+        $gridView = null,
+        $hoursColumnView = null,
+        $hourView = null,
+        $resourceColumnView = null,
+        $resourceColumnHeaderView = null,
+        $resourceColumnHourSlotView = null,
+        $eventView = null,
+        $beforeGridView = null,
+        $afterGridView = null,
+        $resourceColumnHeaderHeightInRems = 4,
+        $hourHeightInRems = 8,
+        $extras = null,
+        $model = null,
+        $dragToScroll = false,
+        $dragToCreate = false,
+    ) {
         $this->startingHour = $startingHour;
         $this->endingHour = $endingHour;
         $this->interval = $interval;
@@ -72,6 +87,11 @@ class LivewireResourceTimeGrid extends Component
 
         $this->hourHeightInRems = $hourHeightInRems;
         $this->resourceColumnHeaderHeightInRems = $resourceColumnHeaderHeightInRems;
+
+        $this->model = $model;
+
+        $this->dragToScroll = $dragToScroll;
+        $this->dragToCreate = $dragToCreate;
 
         $this->afterMount($extras);
     }
@@ -107,6 +127,11 @@ class LivewireResourceTimeGrid extends Component
     }
 
     public function onEventDropped($eventId, $resourceId, $hour, $slot)
+    {
+        //
+    }
+
+    public function onGridMouseLeave()
     {
         //
     }
@@ -170,7 +195,7 @@ class LivewireResourceTimeGrid extends Component
             });
     }
 
-    private function getEventConflictingEvents($event, $events, $conflictingEvents) : Collection
+    private function getEventConflictingEvents($event, $events, $conflictingEvents): Collection
     {
         $eventConflictingNeighborEvents = $this->getEventConflictingNeighborEvents($event, $events);
 
@@ -191,21 +216,26 @@ class LivewireResourceTimeGrid extends Component
             ->values();
     }
 
-    private function getEventConflictingNeighborEvents($event, $events) : Collection
+    private function getEventConflictingNeighborEvents($event, $events): Collection
     {
+        $eventStart = $event['starts_at']->copy();
+        $eventEnd = $event['ends_at']->copy()->subMinute(1);
+        if ($eventStart == $eventEnd) {
+            $eventEnd = $eventEnd->addMinute(1);
+        }
         return $events
-            ->filter(function ($item) use ($event) {
+            ->filter(function ($item) use ($event, $eventStart, $eventEnd) {
                 return (
                         $event['starts_at']->betweenIncluded($item['starts_at'], $item['ends_at'])
                         && $event['ends_at']->betweenIncluded($item['starts_at'], $item['ends_at'])
                     ) || (
-                    $event['starts_at']->betweenExcluded($item['starts_at'], $item['ends_at'])
+                    $event['starts_at']->between($item['starts_at'], $item['ends_at'])
                     ) || (
-                    $event['ends_at']->betweenExcluded($item['starts_at'], $item['ends_at'])
+                    $event['ends_at']->between($item['starts_at'], $item['ends_at'])
                     ) || (
-                    $item['starts_at']->betweenExcluded($event['starts_at'], $event['ends_at'])
+                    $item['starts_at']->between($event['starts_at'], $event['ends_at'])
                     ) || (
-                    $item['ends_at']->betweenExcluded($event['starts_at'], $event['ends_at'])
+                    $item['ends_at']->between($event['starts_at'], $event['ends_at'])
                     );
             })
             ->values();
@@ -248,7 +278,7 @@ class LivewireResourceTimeGrid extends Component
 
     public function hourSlotIntervalHeightInRems()
     {
-        return $this->hourHeightInRems / (60/$this->interval);
+        return $this->hourHeightInRems / (60 / $this->interval);
     }
 
     private function getEventStyles($event, $events)
@@ -264,11 +294,11 @@ class LivewireResourceTimeGrid extends Component
 
         $height = $event['starts_at']->diffInMinutes($event['ends_at']) / $this->interval * $this->hourSlotIntervalHeightInRems();
 
-        $height -= 0.5; // Magic fix 😅
+        $height -= 0.05; // Magic fix 😅 (This amount adds some space between the ending edge of the event and the next one below)
 
         $width = $conflictingEvents->count() > 0
-            ? 95 / $conflictingEvents->count()
-            : 95
+            ? 85 / $conflictingEvents->count()
+            : 85
         ;
 
         $marginLeft = $eventIndex == 0
@@ -281,9 +311,69 @@ class LivewireResourceTimeGrid extends Component
         return collect([
             "margin-left: {$marginLeft}%",
             "margin-top: {$marginTop}rem",
+            "max-height: {$height}rem",
             "height: {$height}rem",
+            "min-height: {$height}rem",
             "width: {$width}%",
-            "z-index: {$zIndex};",
+            // "z-index: {$zIndex};",
+            "z-index: 1",
+            "overflow: hidden",
         ])->implode('; ');
     }
+
+    public function getEventHeader($event)
+    {
+        if (isset($event['header'])) {
+            return $event['header'];
+        }
+        return $event['starts_at']->format('h:i A') . ' - ' . $event['ends_at']->format('h:i A');
+    }
+
+    public function getEventHeaderClass($event)
+    {
+        if (isset($event['header_class'])) {
+            return $event['header_class'];
+        }
+        return $this->styles()['eventTitle'];
+    }
+
+    public function hasEventHeader($event)
+    {
+        return !empty($this->getEventHeader($event));
+    }
+
+    public function getEventBody($event)
+    {
+        return $event['body'];
+    }
+
+    public function getEventBodyClass($event)
+    {
+        if (isset($event['body_class'])) {
+            return $event['body_class'];
+        }
+        return $this->styles()['eventBody'];
+    }
+
+    public function getEventFooter($event)
+    {
+        if (isset($event['footer'])) {
+            return $event['footer'];
+        }
+        return $event['starts_at']->format('h:i A') . ' - ' . $event['ends_at']->format('h:i A');
+    }
+
+    public function getEventFooterClass($event)
+    {
+        if (isset($event['footer_class'])) {
+            return $event['footer_class'];
+        }
+        return $this->styles()['eventTitle'];
+    }
+
+    public function hasEventFooter($event)
+    {
+        return !empty($this->getEventFooter($event));
+    }
+
 }

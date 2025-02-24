@@ -10,8 +10,13 @@
     ondrop="onLivewireResourceTimeGridEventDrop(event, '{{ $_instance->id }}', '{{ $resource['id'] }}', {{ $hour }}, {{ $slot }});"
 
     wire:click.stop="hourSlotClick('{{ $resource['id'] }}', {{ $hour }}, {{ $slot }})"
+    @if($dragToScroll || $dragToCreate)
+    data-resource-id="{{ $resource['id'] }}"
+    data-resource-title="{{ $resource['title'] }}"
+    data-hour="{{ str_pad($hour, 2, '0', STR_PAD_LEFT) }}"
+    data-slot="{{ str_pad($slot, 2, '0', STR_PAD_LEFT) }}"
+    @endif
 >
-
     @foreach($eventsInHourSlot as $event)
         <div
             class="{{ $styles['eventWrapper'] }}"

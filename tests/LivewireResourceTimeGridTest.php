@@ -1,8 +1,8 @@
 <?php
 
-namespace Asantibanez\LivewireResourceTimeGrid\Tests;
+namespace Team383\LivewireResourceTimeGrid\Tests;
 
-use Asantibanez\LivewireResourceTimeGrid\LivewireResourceTimeGrid;
+use Team383\LivewireResourceTimeGrid\LivewireResourceTimeGrid;
 use Livewire\LivewireManager;
 use Livewire\Testing\TestableLivewire;
 

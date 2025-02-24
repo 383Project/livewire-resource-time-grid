@@ -1,7 +1,8 @@
 {
-    "name": "asantibanez/livewire-resource-time-grid",
+    "name": "team383/livewire-resource-time-grid",
     "description": "Laravel Livewire resource time grid component",
     "keywords": [
+        "383group",
         "asantibanez",
         "livewire-resource-time-grid"
     ],
@@ -13,12 +14,17 @@
             "name": "Andrés Santibáñez",
             "email": "santibanez.andres@gmail.com",
             "role": "Developer"
+        },
+        {
+            "name": "383group",
+            "email": "apps@383project.com",
+            "role": "Developer"
         }
     ],
     "require": {
-        "php": "^7.2|^8.0|^8.1",
-        "illuminate/support": "^7.0|^8.0|^9.0|^10.0",
-        "livewire/livewire": "^1.0|^2.0"
+        "php": "^7.2|^8.0|^8.1|^8.2|^8.3|^8.4",
+        "illuminate/support": "^7.0|^8.0|^9.0|^10.0|^11.0|^12.0",
+        "livewire/livewire": "^1.0|^2.0|^3.0"
     },
     "require-dev": {
         "orchestra/testbench": "^5.0|^6.0|^7.0",
@@ -26,18 +32,17 @@
     },
     "autoload": {
         "psr-4": {
-            "Asantibanez\\LivewireResourceTimeGrid\\": "src"
+            "Team383\\LivewireResourceTimeGrid\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Asantibanez\\LivewireResourceTimeGrid\\Tests\\": "tests"
+            "Team383\\LivewireResourceTimeGrid\\Tests\\": "tests"
         }
     },
     "scripts": {
         "test": "vendor/bin/phpunit",
         "test-coverage": "vendor/bin/phpunit --coverage-html coverage"
-
     },
     "config": {
         "sort-packages": true
@@ -45,7 +50,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Asantibanez\\LivewireResourceTimeGrid\\LivewireResourceTimeGridServiceProvider"
+                "Team383\\LivewireResourceTimeGrid\\LivewireResourceTimeGridServiceProvider"
             ]
         }
     }
