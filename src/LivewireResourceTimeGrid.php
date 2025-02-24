@@ -42,6 +42,7 @@ class LivewireResourceTimeGrid extends Component
     public $model;
 
     public $dragToScroll;
+    public $dragToCreate;
 
     protected $listeners = [
         'hourSlotClick' => 'hourSlotClick',
@@ -66,7 +67,8 @@ class LivewireResourceTimeGrid extends Component
         $hourHeightInRems = 8,
         $extras = null,
         $model = null,
-        $dragToScroll = false
+        $dragToScroll = false,
+        $dragToCreate = false,
     ) {
         $this->startingHour = $startingHour;
         $this->endingHour = $endingHour;
@@ -89,6 +91,7 @@ class LivewireResourceTimeGrid extends Component
         $this->model = $model;
 
         $this->dragToScroll = $dragToScroll;
+        $this->dragToCreate = $dragToCreate;
 
         $this->afterMount($extras);
     }

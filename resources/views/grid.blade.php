@@ -1,6 +1,9 @@
-<div @if($dragToScroll)class="drag-to-scroll"@endif>
+<div class="@if($dragToScroll) drag-to-scroll @endif @if($dragToCreate) drag-to-create @endif">
     @if($dragToScroll)
     <div class="z-10 fixed p-2 bg-white text-xs border border-black rounded-lg rounded-tl-none shadow-md drag-to-scroll-pointer-note" style="display: none;" ></div>
+    @endif
+    @if($dragToCreate)
+    <div class="z-10 fixed border border-black bg-black drag-to-create-pointer-note pointer-none" style="display: none;" ></div>
     @endif
     <div>
         @includeIf($beforeGridView)
