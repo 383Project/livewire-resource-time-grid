@@ -4,6 +4,7 @@ namespace Team383\LivewireResourceTimeGrid;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Livewire\Attributes\Reactive;
 use Livewire\Component;
 
 /**
@@ -21,8 +22,11 @@ use Livewire\Component;
  */
 class LivewireResourceTimeGrid extends Component
 {
+    #[Reactive]
     public $startingHour;
+    #[Reactive]
     public $endingHour;
+    #[Reactive]
     public $interval;
 
     public $gridView;
@@ -33,6 +37,7 @@ class LivewireResourceTimeGrid extends Component
     public $resourceColumnHourSlotView;
     public $eventView;
 
+    #[Reactive]
     public $hourHeightInRems;
     public $resourceColumnHeaderHeightInRems;
 
@@ -48,6 +53,7 @@ class LivewireResourceTimeGrid extends Component
         'hourSlotClick' => 'hourSlotClick',
         'onEventClick' => 'onEventClick',
         'onEventDropped' => 'onEventDropped',
+        'onRefreshResourceTimeGrid' => '$refresh',
     ];
 
     public function mount(
@@ -98,7 +104,12 @@ class LivewireResourceTimeGrid extends Component
 
     public function afterMount($extras)
     {
-        //
+        $this->dispatch('onLivewireResourceTimeGridMounted', $extras);
+    }
+
+    public function rendered()
+    {
+        $this->dispatch('onLivewireResourceTimeGridMounted');
     }
 
     public function resources()
