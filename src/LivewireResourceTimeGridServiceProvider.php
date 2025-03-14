@@ -84,14 +84,12 @@ HTML;
                                 if (window.dragToScroll) {
                                     event.preventDefault();
                                     event.stopPropagation();
-                                    console.log('drag to scroll end');
                                     window.dragToCreate = null;
                                     window.dragToScroll = null;
                                     return false;
                                 } else if (window.dragToCreate) {
                                     event.preventDefault();
                                     event.stopPropagation();
-                                    console.log('drag to create end', window.dragToCreate);
                                     const {
                                         fromId
                                         , fromHour
@@ -118,18 +116,14 @@ HTML;
                             });
 
                             element.addEventListener('mouseleave', (event) => {
-                                event.preventDefault();
-                                event.stopPropagation();
                                 window.dragToScroll = null;
                                 window.dragToCreate = null;
-                                console.log('drag to scroll leave');
-                                return false;
                             });
 
                             element.addEventListener('mousemove', (event) => {
-                                event.preventDefault();
-                                event.stopPropagation();
                                 if (window.dragToScroll) {
+                                    event.preventDefault();
+                                    event.stopPropagation();
                                     let xdiff = window.dragToScroll.x - event.clientX;
                                     let ydiff = window.dragToScroll.y - event.clientY;
                                     window.dragToScroll.element.scrollLeft = window.dragToScroll.scrollLeft + xdiff;
@@ -145,24 +139,25 @@ HTML;
 
                                     tip = scrollElement.querySelector('.drag-to-scroll-pointer-note');
                                     tip.style.display = 'none';
-
-                                    console.log('drag to scroll move', window.dragToScroll);
                                     return false;
                                 }
                             });
+
                             element.querySelectorAll('[data-resource-id]').forEach(dataElement => {
-                                const rect = dataElement.getBoundingClientRect();
                                 const hour = dataElement.getAttribute('data-hour');
                                 const slot = dataElement.getAttribute('data-slot');
                                 const title = dataElement.getAttribute('data-resource-title');
                                 const id = dataElement.getAttribute('data-resource-id');
 
                                 dataElement.addEventListener('mousedown', (event) => {
+                                    const rect = dataElement.getBoundingClientRect();
+                                    if(event.button == 0 && !event.ctrlKey && !event.shiftKey) {
+                                        return;
+                                    }
                                     event.preventDefault();
                                     event.stopPropagation();
 
-                                    console.log('drag to scroll start', event.button);
-                                    if (event.button == 0) {
+                                    if (event.button == 1 || event.ctrlKey) {
                                         // Drag to create
                                         window.dragToScroll = null;
                                         window.dragToCreate = {
@@ -170,29 +165,31 @@ HTML;
                                             , fromHour: hour
                                             , fromSlot: slot
                                             , fromId: id
-                                            , toHour: null
-                                            , toSlot: null
-                                            , toId: null
+                                            , toHour: hour
+                                            , toSlot: slot
+                                            , toId: id
+                                            , slots: 1
                                         };
-                                        console.log('drag to create');
                                         return false;
                                     }
-                                    body = document.getElementsByTagName('body')[0];
-                                    window.dragToCreate = null;
-                                    window.dragToScroll = {
-                                        element: element
-                                        , body
-                                        , x: event.clientX
-                                        , y: event.clientY
-                                        , scrollLeft: element.scrollLeft
-                                        , scrollTop: body.scrollTop
-                                    , };
-                                    console.log('drag to scroll', body);
+                                    if (event.button == 2 || event.shiftKey) {
+                                        body = document.getElementsByTagName('body')[0];
+                                        window.dragToCreate = null;
+                                        window.dragToScroll = {
+                                            element: element
+                                            , body
+                                            , x: event.clientX
+                                            , y: event.clientY
+                                            , scrollLeft: element.scrollLeft
+                                            , scrollTop: body.scrollTop
+                                        , };
+                                    }
                                     return false;
                                 });
 
                                 dataElement.addEventListener('mouseover', (event) => {
-                                    tip = scrollElement.querySelector('.drag-to-scroll-pointer-note');
+                                    const tip = scrollElement.querySelector('.drag-to-scroll-pointer-note');
+                                    const rect = dataElement.getBoundingClientRect();
                                     tip.style.display = 'block';
                                     tip.style.left = rect.left + rect.width + 'px';
                                     tip.style.top = rect.top + rect.height + 'px';
@@ -207,7 +204,6 @@ HTML;
                                         let height = endRect.top - startRect.top + endRect.height;
 
                                         const tip = scrollElement.querySelector('.drag-to-create-pointer-note');
-                                        console.log('tip', tip, startRect, endRect, height);
                                         tip.style.top = startRect.top + 'px';
                                         tip.style.left = startRect.left - 5 + 'px';
                                         tip.style.width = '5px';
@@ -227,7 +223,7 @@ HTML;
 
                                 });
                                 dataElement.addEventListener('mouseout', (event) => {
-                                    tip = scrollElement.querySelector('.drag-to-scroll-pointer-note');
+                                    const tip = scrollElement.querySelector('.drag-to-scroll-pointer-note');
                                     tip.style.display = 'none';
                                 });
                             });
@@ -237,7 +233,6 @@ HTML;
                     });
 
                 }
-
                 initDragToScroll();
             </script>
 HTML;

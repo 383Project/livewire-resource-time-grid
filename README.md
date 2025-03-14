@@ -4,16 +4,19 @@ This package allows you to build resource/time grid to show events in a "calenda
 anything that owns an event, eg. a particular day, a user, a client, etc. Events loaded with the component will be then
 rendered in columns according to the resource it belongs to and the starting date of the event. 
 
+This package is based on https://github.com/asantibanez/livewire-resource-time-grid, but has significantly diverged from 
+this in order to support Laravel 11 and Livewire 3, and also provides various improvements and additional features.
+
 ## Preview
 
-![preview](https://github.com/asantibanez/livewire-resource-time-grid/raw/master/preview.gif)
+![preview](https://github.com/383Project/livewire-resource-time-grid/raw/master/preview.gif)
 
 ## Installation
 
 You can install the package via composer:
 
 ```bash
-composer require asantibanez/livewire-resource-time-grid
+composer require team383/livewire-resource-time-grid
 ```
 
 ## Requirements
@@ -169,6 +172,10 @@ Example
 />
 ```
 
+> [!CAUTION]
+> UI Customisation has not been tested with the new 383 implementation; care should be taken to reproduce the necessary parts within
+> each view to ensure your custom views preserve required functionality.
+
 ### Interaction customization
 
 You can override the following methods to add interactivity to your component
@@ -213,6 +220,107 @@ return $event['resource_id'] == $resource['id'];
 
 You can customize it as you need. 👍 
 
+## 383's Additions
+
+As well as bringing the code up to date, we have also added a few features which may be useful.
+
+### Reactive properties
+
+In order to facilitate live updating of key layout features on the fly, we have made the following fields reactive:
+
+* `startingHour`
+* `endingHour`
+* `interval`
+* `hourHeightInRems`
+
+For this to work correctly, you will need to arrange a few things:
+
+* When one of these fields is changed, your app will need to dispatch a `onRefreshResourceTimeGrid` livewire event to refresh the time grid component
+* If you are using drag-to-scroll or drag-to-create, you will need to re-run the initialisation scripts using something like this:
+
+```php
+@script
+<script>
+    // This is required to reinitialise the component when the settings are changed
+    window.Livewire.on('onLivewireResourceTimeGridMounted', () => {
+        initDragToScroll();
+    });
+
+</script>
+@endscript
+```
+
+### Drag-to-scroll & Drag-to-create
+
+We have added a feature which allows you to drag the grid to scroll it. This is particularly useful when you have a large number of resources and events, and you want to be able to scroll through them quickly. This works by scrolling the grid horizontally, or the whole page vertically if you are at the top or bottom of the grid. This is achieved by holding the right mouse button and moving the mouse, or by holding the shift key while dragging.
+
+There is also a hover-over tooltip that repeats the column header and the time slot so it's easy to see where you are when the page is scrolled.
+
+In addition you can create new items by dragging from the top of the grid to the bottom. This will create a new event in the resource you are dragging from, with the start and end times corresponding to the time slot you are dragging to. Use the middle button, or hold control while dragging, to use this feature.
+
+These features must be individually enabled like this:
+
+```php
+    // Render your component
+    @livewire(\App\Livewire\MyLivewireTimeGrid::class, [
+        ...    
+        'dragToScroll'=> true,
+        'dragToCreate' => true,
+    ])
+
+    // You will need to load the relevant scripts after the component is initially rendered:
+    @livewireResourceTimeGridDragToScroll
+    @script
+    <script>
+        // This is required to reinitialise the component when the settings are changed
+        window.Livewire.on('onLivewireResourceTimeGridMounted', () => {
+            initDragToScroll();
+        });
+
+    </script>
+    @endscript
+
+```
+
+### Per-event styling
+
+The original version of this package required a single set of styles from a single function; this was not flexible enough for our requirements at 383
+as we needed to have different colours and content for different events.
+
+Therefore you can now provide a lot more details in the event array; here is an example from our implementation:
+
+```php
+    public function events()
+    {
+        return $itemCollection->map(fn (ItineraryItem $event) => [
+            # These items are standard as in the original package:
+            'id' => $event->id,
+            'resource_id' => intval($event->start_at->format('Ymd')),
+            'title' => $event->name,
+            'starts_at' => $event->start_at,
+            'ends_at' => $event->end_at,
+            # These are the additional properties we have added:
+            'header' => $event->start_at->format('H:i') . " - {$event->name}",
+            'header_class' => 'bg-blue-500 text-white p-1 text-xs font-bold',
+            'body' => $event->description,
+            'body_class' => 'bg-blue-100 p-1 text-xs whitespace-pre overflow',
+            'footer' => " ", # If this is empty, the footer won't be used, so we use a space to ensure it is rendered
+            'footer_class' => 'bg-blue-500 text-white p-1 text-xs font-bold',
+        ]);
+        return $return;
+    }
+```
+
+By including this information in the event array, you can now style the header, body and footer of each event individually. This allows you to have different colours, fonts, sizes, etc. for each event, and to include additional information in the event card.
+
+## Original Information
+
+> [!WARNING]
+> None of the following information has been explicitly updated in the 383 environment, and as such
+> everything that follows should be considered as potentially out of date information, and may not
+> apply.
+
+
 ### Testing
 
 ``` bash
@@ -221,11 +329,14 @@ composer test
 
 ### Todo
 
-Add more tests 💪
+* Add drag-to-resize functionality
+* Fully remove old implementation quirks and redundencies
+* Ensure package is self-sufficient and does not rely on external scripts
 
 ### Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
+
 
 ## Contributing
 
