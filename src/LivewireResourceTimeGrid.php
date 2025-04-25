@@ -290,6 +290,8 @@ class LivewireResourceTimeGrid extends Component
 
         $zIndex = ($eventIndex + 1) * 100;
 
+        $marginLeft = 0;
+
         return collect([
             "margin-left: {$marginLeft}%",
             "margin-top: {$marginTop}rem",
