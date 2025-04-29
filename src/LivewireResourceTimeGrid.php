@@ -49,6 +49,8 @@ class LivewireResourceTimeGrid extends Component
     public $dragToScroll;
     public $dragToCreate;
 
+    public $gutter;
+
     protected $listeners = [
         'hourSlotClick' => 'hourSlotClick',
         'onEventClick' => 'onEventClick',
@@ -75,6 +77,7 @@ class LivewireResourceTimeGrid extends Component
         $model = null,
         $dragToScroll = false,
         $dragToCreate = false,
+        $gutter = 10,
     ) {
         $this->startingHour = $startingHour;
         $this->endingHour = $endingHour;
@@ -98,6 +101,8 @@ class LivewireResourceTimeGrid extends Component
 
         $this->dragToScroll = $dragToScroll;
         $this->dragToCreate = $dragToCreate;
+
+        $this->gutter = $gutter;
 
         $this->afterMount($extras);
     }
@@ -206,57 +211,64 @@ class LivewireResourceTimeGrid extends Component
             });
     }
 
-    private function getEventConflictingEvents($event, $events, $conflictingEvents): Collection
-    {
-        $eventConflictingNeighborEvents = $this->getEventConflictingNeighborEvents($event, $events);
-
-        $notInConflictingEvents = $eventConflictingNeighborEvents
-            ->reject(function ($event) use ($conflictingEvents) {
-                return $conflictingEvents->contains($event);
-            });
-
-        $conflictingEvents = $conflictingEvents->merge($notInConflictingEvents);
-
-        return $conflictingEvents
-            ->merge(
-                $notInConflictingEvents->flatMap(function ($event) use ($events, $conflictingEvents) {
-                    return $this->getEventConflictingEvents($event, $events, $conflictingEvents);
-                })
-            )
-            ->unique('id')
-            ->values();
-    }
-
-    private function getEventConflictingNeighborEvents($event, $events): Collection
-    {
-        $eventStart = $event['starts_at']->copy();
-        $eventEnd = $event['ends_at']->copy()->subMinute(1);
-        if ($eventStart == $eventEnd) {
-            $eventEnd = $eventEnd->addMinute(1);
-        }
-        return $events
-            ->filter(function ($item) use ($event, $eventStart, $eventEnd) {
-                return (
-                        $event['starts_at']->betweenIncluded($item['starts_at'], $item['ends_at'])
-                        && $event['ends_at']->betweenIncluded($item['starts_at'], $item['ends_at'])
-                    ) || (
-                    $event['starts_at']->between($item['starts_at'], $item['ends_at'])
-                    ) || (
-                    $event['ends_at']->between($item['starts_at'], $item['ends_at'])
-                    ) || (
-                    $item['starts_at']->between($event['starts_at'], $event['ends_at'])
-                    ) || (
-                    $item['ends_at']->between($event['starts_at'], $event['ends_at'])
-                    );
-            })
-            ->values();
-    }
-
     private function getEventsForResource($resource, Collection $events) : Collection
     {
         return $events
             ->filter(function ($event) use ($resource) {
                 return $this->isEventForResource($event, $resource);
+            })
+            ->map(function ($event) use ($resource) {
+                $event['resource'] = $resource;
+                $event['start_ts'] = $event['starts_at']->timestamp;
+                $event['end_ts'] = $event['ends_at']->timestamp;
+                return $event;
+            })
+            ->sortBy('start_ts')
+            ->values()
+            ->pipe(function ($events) {
+                $columns = collect(); // Each item is a collection of events in that column
+
+                $eventsWithColumns = $events->map(function ($event) use (&$columns) {
+                    // Find first column where it doesn’t overlap the last event
+                    $colIndex = $columns->search(function ($col) use ($event) {
+                        $last = $col->last();
+                        return $last['end_ts'] <= $event['start_ts'];
+                    });
+
+                    if ($colIndex === false) {
+                        $colIndex = $columns->count();
+                        $columns->push(collect([$event]));
+                    } else {
+                        $columns[$colIndex]->push($event);
+                    }
+
+                    $event['col'] = $colIndex;
+                    return $event;
+                });
+
+                return $eventsWithColumns->map(function ($event) use ($eventsWithColumns) {
+                    // Find overlapping events
+                    $overlappingCols = $eventsWithColumns
+                        ->filter(function ($other) use ($event) {
+                            return $event !== $other &&
+                                $event['start_ts'] < $other['end_ts'] &&
+                                $event['end_ts'] > $other['start_ts'];
+                        })
+                        ->pluck('col')
+                        ->push($event['col'])
+                        ->unique()
+                        ->sort()
+                        ->values();
+
+                    $totalCols = $overlappingCols->max() + 1;
+                    $width = round((100 - $this->gutter) / $totalCols, 2);
+                    $left = round($event['col'] * $width, 2);
+
+                    return collect($event)->merge([
+                        'width' => $width,
+                        'left' => $left,
+                    ]);
+                });
             });
     }
 
@@ -294,30 +306,12 @@ class LivewireResourceTimeGrid extends Component
 
     private function getEventStyles($event, $events)
     {
-        $conflictingEvents = $this->getEventConflictingEvents($event, $events, collect());
-
-        $eventIndex = $conflictingEvents
-            ->sortBy('id')
-            ->values()
-            ->search($event);
-
         $marginTop = $this->eventHourSlotFraction($event) * $this->hourSlotIntervalHeightInRems();
-
         $height = $event['starts_at']->diffInMinutes($event['ends_at']) / $this->interval * $this->hourSlotIntervalHeightInRems();
-
         $height -= 0.05; // Magic fix 😅 (This amount adds some space between the ending edge of the event and the next one below)
+        $width = $event["width"];
+        $marginLeft = $event["left"];
 
-        $width = $conflictingEvents->count() > 0
-            ? 85 / $conflictingEvents->count()
-            : 85
-        ;
-
-        $marginLeft = $eventIndex == 0
-            ? 0
-            : $eventIndex * $width + $eventIndex
-        ;
-
-        $zIndex = ($eventIndex + 1) * 100;
 
         return collect([
             "margin-left: {$marginLeft}%",
@@ -326,7 +320,6 @@ class LivewireResourceTimeGrid extends Component
             "height: {$height}rem",
             "min-height: {$height}rem",
             "width: {$width}%",
-            // "z-index: {$zIndex};",
             "z-index: 1",
             "overflow: hidden",
         ])->implode('; ');
