@@ -5,7 +5,7 @@
 
     @if($this->hasEventHeader($event))
     <div class="{{ $this->getEventHeaderClass($event) }}">
-        !!{{ $this->getEventHeader($event) }}
+        {{ $this->getEventHeader($event) }}
     </div>
     @endif
 
